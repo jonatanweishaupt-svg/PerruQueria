@@ -341,7 +341,11 @@ input:checked+.tsl::before{transform:translateX(20px)}
       </div>
       <div class="notice notice-info">
         <span style="font-size:1.1rem">ℹ️</span>
-        <span>Reservas con <b>mínimo 4 horas de anticipación</b>. Al presionar el botón se abrirá WhatsApp con tus datos.</span>
+        <span>Horario de atención: <b>07:00 a 22:00 hrs</b>. Al presionar el botón se abrirá WhatsApp con tus datos.</span>
+      </div>
+      <div class="notice" style="background:#e8f5e9;color:#2e7d32;border-left:4px solid #4a7c59">
+        <span style="font-size:1.1rem">📋</span>
+        <span>Tu hora queda <b>sujeta a confirmación</b> por parte del administrador. Te contactaremos para validarla.</span>
       </div>
       <button class="btn btn-wa" style="width:100%;justify-content:center;padding:13px;font-size:1rem" onclick="doBook()">
         💬 Solicitar hora por WhatsApp
@@ -551,22 +555,7 @@ input:checked+.tsl::before{transform:translateX(20px)}
 
 <div id="toast"></div>
 
-<script type="module">
-// ═══ FIREBASE ═══
-import { initializeApp }              from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-
-const firebaseConfig = {
-  apiKey:            "AIzaSyAjHRObljA9Br_TN0cvsDjS5JPnsHnEecs",
-  authDomain:        "quiltroqueria.firebaseapp.com",
-  projectId:         "quiltroqueria",
-  storageBucket:     "quiltroqueria.firebasestorage.app",
-  messagingSenderId: "133716954211",
-  appId:             "1:133716954211:web:e24bf0d0ec30ccbaa37c56"
-};
-const fbApp = initializeApp(firebaseConfig);
-const db    = getFirestore(fbApp);
-
+<script>
 // ═══ CONSTANTS ═══
 const DN=['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
 const DF=['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'];
@@ -585,19 +574,20 @@ const SVCS=[
 let curW=0,selD=null,selS=null,selAT='ambos';
 let isAdm=false,aW=0,aD=null,cfgSt=null;
 
-// ═══ STORAGE (Firestore — colección "agenda", un doc por clave) ═══
+// ═══ STORAGE (localStorage con fallback a window.storage si está disponible) ═══
 async function _get(key){
+  // Intentar window.storage primero (Artifact), luego localStorage
   try{
-    const snap = await getDoc(doc(db,'agenda',key));
-    if(snap.exists()) return snap.data().value;
-  }catch(e){ console.warn('Firestore _get error:',e); }
+    if(window.storage){const r=await window.storage.get(key);if(r&&r.value)return r.value;}
+  }catch(e){}
+  try{const v=localStorage.getItem(key);if(v)return v;}catch(e){}
   return null;
 }
 async function _set(key,val){
-  try{
-    await setDoc(doc(db,'agenda',key),{value:val});
-    return true;
-  }catch(e){ console.warn('Firestore _set error:',e); return false; }
+  let ok=false;
+  try{if(window.storage){await window.storage.set(key,val);ok=true;}}catch(e){}
+  try{localStorage.setItem(key,val);ok=true;}catch(e){}
+  return ok;
 }
 async function lCfg(){
   try{const r=await _get('qc_cfg');if(r)return JSON.parse(r);}catch(e){}
@@ -630,17 +620,20 @@ function wDates(off=0){
   m.setDate(t.getDate()-dow+1+off*7);
   return Array.from({length:7},(_,i)=>{const d=new Date(m);d.setDate(m.getDate()+i);return d;});
 }
+// Horario permitido para clientes: 07:00 a 22:00
+function slotInClientHours(s){
+  const h=parseInt(s.split(':')[0],10);
+  return h>=7&&h<22;
+}
 async function avSlotsAsync(dc,ds,res){
   const blocked=await lBlocked();
   const b=res.filter(r=>r.date===ds).map(r=>r.slot);
   const blk=blocked.filter(x=>x.date===ds).map(x=>x.slot);
-  const n=new Date();
-  return dc.slots.filter(s=>!b.includes(s)&&!blk.includes(s)&&(new Date(ds+'T'+s+':00')-n)/36e5>=4);
+  return dc.slots.filter(s=>!b.includes(s)&&!blk.includes(s)&&slotInClientHours(s));
 }
 function avSlots(dc,ds,res){
   const b=res.filter(r=>r.date===ds).map(r=>r.slot);
-  const n=new Date();
-  return dc.slots.filter(s=>!b.includes(s)&&(new Date(ds+'T'+s+':00')-n)/36e5>=4);
+  return dc.slots.filter(s=>!b.includes(s)&&slotInClientHours(s));
 }
 
 // ═══ NAV ═══
@@ -709,7 +702,7 @@ async function renderWeek(){
     const blkd=blocked.filter(b=>b.date===ds).map(b=>b.slot);
     const bookedSlots=res.filter(r=>r.date===ds).map(r=>r.slot);
     const now2=new Date();
-    const av=dc.slots.filter(s=>!bookedSlots.includes(s)&&!blkd.includes(s)&&(new Date(ds+'T'+s+':00')-now2)/36e5>=4);
+    const av=dc.slots.filter(s=>!bookedSlots.includes(s)&&!blkd.includes(s)&&slotInClientHours(s));
     let lbl,cls;
     if(!dc.open){lbl='Cerrado';cls='s-off';}
     else if(av.length===0){lbl='Completo';cls='s-full';}
@@ -747,10 +740,11 @@ async function renderSlots(ds,dObj){
   const grid=document.getElementById('slotsGrid');grid.innerHTML='';
   let hayD=false;
   dc.slots.forEach(s=>{
-    const isB=booked.includes(s)||blkd.includes(s),dH=(new Date(ds+'T'+s+':00')-now)/36e5;
+    const isB=booked.includes(s)||blkd.includes(s);
+    const outOfHours=!slotInClientHours(s);
     const btn=document.createElement('button');
     if(isB){btn.className='slot-btn booked';btn.textContent=s+' ✗';btn.disabled=true;}
-    else if(dH<4){btn.className='slot-btn no-ant';btn.textContent=s+' ⏰';btn.disabled=true;btn.title='Menos de 4h de anticipación';}
+    else if(outOfHours){btn.className='slot-btn no-ant';btn.textContent=s+' 🌙';btn.disabled=true;btn.title='Fuera del horario de atención (07:00–22:00)';}
     else{
       hayD=true;btn.className='slot-btn'+(selS===s?' selected':'');btn.textContent=s;
       btn.onclick=()=>{selS=s;renderSlots(ds,dObj);showBook();};
@@ -759,7 +753,7 @@ async function renderSlots(ds,dObj){
   });
   if(!hayD){
     const p=document.createElement('p');p.className='no-slots';p.style.marginTop='6px';
-    p.textContent='No hay horas disponibles con el mínimo de 4 horas de anticipación.';grid.appendChild(p);
+    p.textContent='No hay horas disponibles en el horario de atención (07:00–22:00).';grid.appendChild(p);
   }
 }
 
@@ -823,7 +817,9 @@ async function doBook(){
   const pay=payEl?.dataset.pay||'transferencia';
   if(!tutor||!pet||!tel||!edad||!selD||!selS){toast('⚠️ Completa todos los campos requeridos');return;}
   if(tel.length<9){toast('⚠️ Ingresa los 9 dígitos del teléfono');return;}
-  if((new Date(selD+'T'+selS+':00')-new Date())/36e5<4){toast('⚠️ Reserva con al menos 4 horas de anticipación');return;}
+  // Validar que la hora esté en el rango permitido para clientes (07:00–22:00)
+  const slotH=parseInt(selS.split(':')[0],10);
+  if(slotH<7||slotH>=22){toast('⚠️ Solo se pueden agendar horas entre las 07:00 y las 22:00');return;}
   const res=await lRes();
   if(res.some(r=>r.date===selD&&r.slot===selS)){toast('⚠️ Este horario ya fue reservado');return;}
   const cfg=await lCfg();
@@ -846,8 +842,8 @@ async function doBook(){
     ?`💵 *Forma de pago:* Efectivo _(requiere verificación telefónica con el equipo)_`
     :`🏦 *Forma de pago:* Transferencia`;
   const abonoLine=pay==='transferencia'
-    ?`💰 *Entiendo que debo realizar un abono de $10.000 para confirmar mi hora.*`
-    :`📞 *Entiendo que debo verificar mi pago en efectivo por teléfono con el equipo para confirmar mi hora.*`;
+    ?`💰 *Entiendo que debo realizar un abono de $10.000 y que mi hora está sujeta a confirmación del administrador.*`
+    :`📞 *Entiendo que debo verificar mi pago en efectivo por teléfono. Mi hora está sujeta a confirmación del administrador.*`;
   const msg=[
     `¡Hola! Quiero reservar una hora en Quiltroquería ✂️🐾`,``,
     `📅 *Fecha:* ${fLbl}`,`🕐 *Hora:* ${selS}`,``,
@@ -871,8 +867,8 @@ async function doBook(){
       <p style="margin-bottom:.7rem"><b>${pet}</b> tiene una hora apartada el <b>${fLbl}</b> a las <b>${selS}</b>.<br>Servicio: <b>${svc}</b>${isLarge?' · 🐕 Raza grande':''}</p>
       <p style="font-size:.86rem;color:#5d4037;margin-bottom:1.2rem">
         ${isEfectivo
-          ?'⚠️ Elegiste pago en <b>efectivo</b>. Tu hora se confirma solo cuando el equipo verifique contigo por teléfono. Envíanos tu solicitud:'
-          :'⚠️ Tu hora se <b>confirma solo con el abono de $10.000</b>. Envíanos tu solicitud ahora:'}
+          ?'⚠️ Elegiste pago en <b>efectivo</b>. Tu hora está <b>sujeta a confirmación</b> del administrador y debes verificar el pago por teléfono. Envíanos tu solicitud:'
+          :'⚠️ Tu hora está <b>sujeta a confirmación</b> del administrador. Una vez validado el abono de $10.000, quedará confirmada. Envíanos tu solicitud:'}
       </p>
       <a href="${waUrl}" target="_blank" class="btn btn-wa" style="padding:12px 26px;font-size:.97rem">💬 Enviar solicitud por WhatsApp</a><br><br>
       <button class="btn" style="background:var(--warm);color:var(--dark);border:none" onclick="initPub()">Volver al inicio</button>
@@ -894,7 +890,7 @@ async function renderStats(){
     const blkd=blocked.filter(b=>b.date===ds).map(b=>b.slot);
     const bookedS=res.filter(r=>r.date===ds).map(r=>r.slot);
     const n2=new Date();
-    av+=dc.slots.filter(s=>!bookedS.includes(s)&&!blkd.includes(s)&&(new Date(ds+'T'+s+':00')-n2)/36e5>=4).length;
+    av+=dc.slots.filter(s=>!bookedS.includes(s)&&!blkd.includes(s)&&slotInClientHours(s)).length;
     busy+=res.filter(r=>r.date===ds).length+blkd.length;
   });
   const tR=res.filter(r=>r.date===tds(today)).length;
@@ -1462,45 +1458,6 @@ function toast(msg){
   const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');
   setTimeout(()=>t.classList.remove('show'),2800);
 }
-
-// ═══ EXPONER AL SCOPE GLOBAL (requerido con type="module") ═══
-window.showPublic        = showPublic;
-window.showLogin         = showLogin;
-window.showAdmin         = showAdmin;
-window.logout            = logout;
-window.doLogin           = doLogin;
-window.togPass           = togPass;
-window.changeWeek        = changeWeek;
-window.selDay            = selDay;
-window.selSvc            = selSvc;
-window.selPay            = selPay;
-window.upSum             = upSum;
-window.doBook            = doBook;
-window.switchTab         = switchTab;
-window.aChgWeek          = aChgWeek;
-window.cfmRes            = cfmRes;
-window.delRes            = delRes;
-window.openMod           = openMod;
-window.closeMod          = closeMod;
-window.saveEdit          = saveEdit;
-window.togM              = togM;
-window.cpRow             = cpRow;
-window.cpMonth           = cpMonth;
-window.cpDayAll          = cpDayAll;
-window.delMonth          = delMonth;
-window.blkSlot           = blkSlot;
-window.unblkSlot         = unblkSlot;
-window.blkSlotManual     = blkSlotManual;
-window.loadBlkSlots      = loadBlkSlots;
-window.unblkSlotCfg      = unblkSlotCfg;
-window.renderCfg         = renderCfg;
-window.saveCfgAll        = saveCfgAll;
-window.togDay            = togDay;
-window.addSlot           = addSlot;
-window.rmSlot            = rmSlot;
-window.setA              = setA;
-window.togLargeDogCfg    = togLargeDogCfg;
-window.cpPubRow          = cpPubRow;
 
 // ═══ INIT ═══
 initPub();
