@@ -555,7 +555,21 @@ input:checked+.tsl::before{transform:translateX(20px)}
 
 <div id="toast"></div>
 
-<script>
+<script type="module">
+// ═══ FIREBASE ═══
+import{initializeApp}from'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
+import{getFirestore,doc,getDoc,setDoc,deleteDoc,collection,getDocs,query,where}from'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
+
+const firebaseConfig={
+  apiKey:"AIzaSyD5EiJywElwLpbCSXQvNCJnnJQHw9T52Mg",
+  authDomain:"quiltroqueria-dc627.firebaseapp.com",
+  projectId:"quiltroqueria-dc627",
+  storageBucket:"quiltroqueria-dc627.firebasestorage.app",
+  messagingSenderId:"554008212676",
+  appId:"1:554008212676:web:77630e837edde31fbd8591"
+};
+const fbApp=initializeApp(firebaseConfig);
+const db=getFirestore(fbApp);
 // ═══ CONSTANTS ═══
 const DN=['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
 const DF=['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'];
@@ -574,20 +588,19 @@ const SVCS=[
 let curW=0,selD=null,selS=null,selAT='ambos';
 let isAdm=false,aW=0,aD=null,cfgSt=null;
 
-// ═══ STORAGE (localStorage con fallback a window.storage si está disponible) ═══
+// ═══ STORAGE — Firestore ═══
 async function _get(key){
-  // Intentar window.storage primero (Artifact), luego localStorage
   try{
-    if(window.storage){const r=await window.storage.get(key);if(r&&r.value)return r.value;}
-  }catch(e){}
-  try{const v=localStorage.getItem(key);if(v)return v;}catch(e){}
+    const snap=await getDoc(doc(db,'quiltroqueria',key));
+    if(snap.exists())return snap.data().value;
+  }catch(e){console.warn('FB get error',key,e);}
   return null;
 }
 async function _set(key,val){
-  let ok=false;
-  try{if(window.storage){await window.storage.set(key,val);ok=true;}}catch(e){}
-  try{localStorage.setItem(key,val);ok=true;}catch(e){}
-  return ok;
+  try{
+    await setDoc(doc(db,'quiltroqueria',key),{value:val});
+    return true;
+  }catch(e){console.warn('FB set error',key,e);return false;}
 }
 async function lCfg(){
   try{const r=await _get('qc_cfg');if(r)return JSON.parse(r);}catch(e){}
@@ -1460,6 +1473,16 @@ function toast(msg){
 }
 
 // ═══ INIT ═══
+// Exponer funciones al scope global para los onclick del HTML
+Object.assign(window,{
+  showPublic,showLogin,showAdmin,logout,doLogin,togPass,
+  changeWeek,selDay,selSvc,selPay,upSum,doBook,
+  switchTab,aChgWeek,cfmRes,delRes,openMod,closeMod,saveEdit,
+  togDay,setA,addSlot,rmSlot,saveCfgAll,togLargeDogCfg,
+  blkSlot,unblkSlot,blkSlotManual,loadBlkSlots,unblkSlotCfg,
+  togM,cpRow,cpMonth,cpDayAll,cpPubRow,
+  renderCfg,renderHist
+});
 initPub();
 </script>
 </body>
