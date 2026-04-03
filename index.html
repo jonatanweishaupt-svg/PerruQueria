@@ -254,6 +254,8 @@ input:checked+.tsl::before{transform:translateX(20px)}
     <!-- SERVICIOS -->
     <div class="svc-showcase" id="svcShowcase">
       <div class="svc-showcase-title">✂️ Nuestros Servicios</div>
+      <!-- Aviso perro grande (controlado desde admin) -->
+      <div id="largeDogNotice" style="display:none;background:#fff8e1;border-left:4px solid #ffc107;border-radius:10px;padding:.8rem 1rem;margin-bottom:1rem;font-size:.86rem;color:#5d4037;gap:10px;align-items:center;flex-wrap:wrap"></div>
       <div class="svc-cards" id="svcCards"></div>
     </div>
 
@@ -310,8 +312,27 @@ input:checked+.tsl::before{transform:translateX(20px)}
           <div class="sch active" data-val="Corte de Pelo" data-key="corte" onclick="selSvc(this)">✂️ Corte de Pelo</div>
           <div class="sch" data-val="Baño" data-key="bano" onclick="selSvc(this)">🛁 Baño</div>
           <div class="sch" data-val="Corte de Uñas" data-key="unas" onclick="selSvc(this)">💅 Corte de Uñas</div>
-          <div class="sch" data-val="Baño + Corte" data-key="combo" onclick="selSvc(this)">✨ Baño + Corte</div>
+          <div class="sch" data-val="Baño + Corte de Pelo" data-key="combo" onclick="selSvc(this)">✨ Baño + Corte de Pelo</div>
+          <div class="sch" data-val="Baño + Corte de Pelo + Uñas" data-key="fullcombo" onclick="selSvc(this)">🌟 Pack Completo</div>
         </div>
+      </div>
+      <!-- Casilla perro grande (se muestra/oculta según config admin) -->
+      <div id="largeDogRow" style="display:none;margin-bottom:1rem">
+        <label style="display:flex;align-items:center;gap:10px;cursor:pointer;background:#fff8e1;border:2px solid #ffc107;border-radius:10px;padding:.7rem 1rem;font-size:.88rem;color:#5d4037">
+          <input type="checkbox" id="fLargeDog" onchange="upSum()" style="width:18px;height:18px;cursor:pointer;accent-color:var(--caramel)">
+          <span>🐕 <b>Mi perro es de raza grande</b> <span id="largeDogExtraLbl" style="font-size:.8rem;opacity:.8"></span></span>
+        </label>
+      </div>
+      <!-- Método de pago -->
+      <div class="form-group" style="margin-bottom:1rem">
+        <label>Método de Pago *</label>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <div class="sch active" data-pay="transferencia" onclick="selPay(this)" style="display:flex;align-items:center;gap:6px">🏦 Transferencia</div>
+          <div class="sch" data-pay="efectivo" onclick="selPay(this)" style="display:flex;align-items:center;gap:6px">💵 Efectivo</div>
+        </div>
+      </div>
+      <div id="efectivoNotice" style="display:none;background:#fff3cd;border-left:4px solid #fd7e14;border-radius:10px;padding:.75rem 1rem;margin-bottom:1rem;font-size:.84rem;color:#664d03">
+        <b>⚠️ Pago en efectivo:</b> Debes confirmar tu reserva llamando o escribiendo directamente al administrador. Tu hora quedará apartada pero <b>no confirmada</b> hasta que el equipo valide contigo por teléfono.
       </div>
       <div class="form-summary" id="fSum"></div>
       <div class="notice notice-abono">
@@ -420,8 +441,52 @@ input:checked+.tsl::before{transform:translateX(20px)}
         <p style="font-size:.78rem;color:var(--gray);margin-top:.8rem">Los precios se muestran en la página pública. Deja en blanco para no mostrar precio.</p>
       </div>
 
+      <!-- COBRO EXTRA RAZA GRANDE -->
+      <div style="background:var(--white);border-radius:var(--radius);padding:1.4rem;box-shadow:var(--shadow);margin-bottom:1.5rem;border-left:4px solid #ffc107">
+        <h3 style="font-family:'Playfair Display',serif;font-size:1.15rem;margin-bottom:.4rem">🐕 Cobro Extra – Raza Grande</h3>
+        <p style="font-size:.8rem;color:var(--gray);margin-bottom:1rem">Activa el aviso y define el valor adicional para perros de raza grande. El aviso aparece en la sección pública de servicios.</p>
+        <div style="display:flex;gap:14px;flex-wrap:wrap;align-items:center;margin-bottom:.8rem">
+          <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-weight:600;font-size:.9rem">
+            <span class="tsw" style="margin:0">
+              <input type="checkbox" id="cfgLargeDogActive" onchange="togLargeDogCfg(this)">
+              <span class="tsl"></span>
+            </span>
+            Activar aviso de cobro extra
+          </label>
+          <span id="cfgLargeDogStatus" style="font-size:.8rem;color:var(--gray)">Desactivado</span>
+        </div>
+        <div id="cfgLargeDogPriceRow" style="display:none;display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+          <span style="font-weight:700;color:var(--brown);font-size:.9rem">Cobro adicional $</span>
+          <input type="number" id="cfgLargeDogPrice" placeholder="Ej: 3000" min="0" step="100"
+            style="width:130px;padding:7px 10px;border:2px solid var(--warm);border-radius:8px;
+              font-family:'DM Sans',sans-serif;font-size:.9rem;background:var(--white);color:var(--dark);outline:none"
+            onfocus="this.style.borderColor='var(--caramel)'" onblur="this.style.borderColor='var(--warm)'">
+          <span style="font-size:.78rem;color:var(--gray)">Se suma al precio del servicio elegido</span>
+        </div>
+      </div>
+
       <div id="cfgDays"></div>
       <button class="btn btn-success" style="margin-top:1rem" onclick="saveCfgAll()">💾 Guardar Configuración</button>
+
+      <!-- BLOQUEO DE HORAS -->
+      <div style="background:var(--white);border-radius:var(--radius);padding:1.4rem;box-shadow:var(--shadow);margin-top:1.5rem;border-left:4px solid var(--red)">
+        <h3 style="font-family:'Playfair Display',serif;font-size:1.15rem;margin-bottom:.4rem">🔒 Bloquear Hora Específica</h3>
+        <p style="font-size:.8rem;color:var(--gray);margin-bottom:1rem">Elige un día y se mostrarán solo las horas disponibles configuradas para ese día.</p>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end">
+          <div class="form-group" style="flex:1;min-width:140px">
+            <label>Fecha</label>
+            <input type="date" id="blkDate" onchange="loadBlkSlots()" style="padding:10px 13px;border:2px solid var(--warm);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:.9rem;background:var(--cream);color:var(--dark);outline:none">
+          </div>
+          <div class="form-group" style="flex:1;min-width:140px">
+            <label>Hora disponible</label>
+            <select id="blkSlotSel" style="padding:10px 13px;border:2px solid var(--warm);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:.9rem;background:var(--cream);color:var(--dark);outline:none;width:100%">
+              <option value="">— Elige una fecha primero —</option>
+            </select>
+          </div>
+          <button class="btn btn-danger" onclick="blkSlotManual()">🔒 Bloquear</button>
+        </div>
+        <div id="blkList" style="margin-top:1.1rem"></div>
+      </div>
     </div>
   </div>
 </div>
@@ -461,7 +526,8 @@ input:checked+.tsl::before{transform:translateX(20px)}
         <label>Servicio</label>
         <select id="eService">
           <option>Corte de Pelo</option><option>Baño</option>
-          <option>Corte de Uñas</option><option>Baño + Corte</option>
+          <option>Corte de Uñas</option><option>Baño + Corte de Pelo</option>
+          <option>Baño + Corte de Pelo + Uñas</option>
         </select>
       </div>
       <div class="form-group">
@@ -485,7 +551,22 @@ input:checked+.tsl::before{transform:translateX(20px)}
 
 <div id="toast"></div>
 
-<script>
+<script type="module">
+// ═══ FIREBASE ═══
+import { initializeApp }              from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey:            "AIzaSyAjHRObljA9Br_TN0cvsDjS5JPnsHnEecs",
+  authDomain:        "quiltroqueria.firebaseapp.com",
+  projectId:         "quiltroqueria",
+  storageBucket:     "quiltroqueria.firebasestorage.app",
+  messagingSenderId: "133716954211",
+  appId:             "1:133716954211:web:e24bf0d0ec30ccbaa37c56"
+};
+const fbApp = initializeApp(firebaseConfig);
+const db    = getFirestore(fbApp);
+
 // ═══ CONSTANTS ═══
 const DN=['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
 const DF=['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'];
@@ -493,35 +574,54 @@ const MN=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Sep
 const WA='56954399797';
 
 const SVCS=[
-  {key:'corte',  icon:'✂️', name:'Corte de Pelo',  val:'Corte de Pelo'},
-  {key:'bano',   icon:'🛁', name:'Baño',            val:'Baño'},
-  {key:'unas',   icon:'💅', name:'Corte de Uñas',   val:'Corte de Uñas'},
-  {key:'combo',  icon:'✨', name:'Baño + Corte',    val:'Baño + Corte'},
+  {key:'corte',    icon:'✂️', name:'Corte de Pelo',                val:'Corte de Pelo'},
+  {key:'bano',     icon:'🛁', name:'Baño',                          val:'Baño'},
+  {key:'unas',     icon:'💅', name:'Corte de Uñas',                 val:'Corte de Uñas'},
+  {key:'combo',    icon:'✨', name:'Baño + Corte de Pelo',          val:'Baño + Corte de Pelo'},
+  {key:'fullcombo',icon:'🌟', name:'Baño + Corte de Pelo + Uñas',   val:'Baño + Corte de Pelo + Uñas'},
 ];
 
 // ═══ STATE ═══
 let curW=0,selD=null,selS=null,selAT='ambos';
 let isAdm=false,aW=0,aD=null,cfgSt=null;
 
-// ═══ STORAGE ═══
+// ═══ STORAGE (Firestore — colección "agenda", un doc por clave) ═══
+async function _get(key){
+  try{
+    const snap = await getDoc(doc(db,'agenda',key));
+    if(snap.exists()) return snap.data().value;
+  }catch(e){ console.warn('Firestore _get error:',e); }
+  return null;
+}
+async function _set(key,val){
+  try{
+    await setDoc(doc(db,'agenda',key),{value:val});
+    return true;
+  }catch(e){ console.warn('Firestore _set error:',e); return false; }
+}
 async function lCfg(){
-  try{const r=await window.storage.get('qc_cfg');if(r)return JSON.parse(r.value);}catch(e){}
+  try{const r=await _get('qc_cfg');if(r)return JSON.parse(r);}catch(e){}
   const c={days:{}};
   for(let i=1;i<=6;i++) c.days[i]={open:true,slots:dSlots(),animales:'ambos'};
   c.days[0]={open:false,slots:[],animales:'ambos'};
   return c;
 }
-async function sCfg(c){await window.storage.set('qc_cfg',JSON.stringify(c));}
+async function sCfg(c){await _set('qc_cfg',JSON.stringify(c));}
 async function lRes(){
-  try{const r=await window.storage.get('qc_res');if(r)return JSON.parse(r.value);}catch(e){}
+  try{const r=await _get('qc_res');if(r)return JSON.parse(r);}catch(e){}
   return[];
 }
-async function sRes(list){await window.storage.set('qc_res',JSON.stringify(list));}
+async function sRes(list){await _set('qc_res',JSON.stringify(list));}
 async function lPrices(){
-  try{const r=await window.storage.get('qc_prices');if(r)return JSON.parse(r.value);}catch(e){}
-  return{corte:'',bano:'',unas:'',combo:''};
+  try{const r=await _get('qc_prices');if(r)return JSON.parse(r);}catch(e){}
+  return{corte:'',bano:'',unas:'',combo:'',fullcombo:'',largedog_active:false,largedog_price:''};
 }
-async function sPrices(p){await window.storage.set('qc_prices',JSON.stringify(p));}
+async function lExtras(){
+  try{const r=await _get('qc_extras');if(r)return JSON.parse(r);}catch(e){}
+  return{largedog_active:false,largedog_price:''};
+}
+async function sExtras(e){await _set('qc_extras',JSON.stringify(e));}
+async function sPrices(p){await _set('qc_prices',JSON.stringify(p));}
 function dSlots(){const s=[];for(let h=9;h<=17;h++)s.push(p2(h)+':00');return s;}
 function p2(n){return String(n).padStart(2,'0');}
 function tds(d){return `${d.getFullYear()}-${p2(d.getMonth()+1)}-${p2(d.getDate())}`;}
@@ -529,6 +629,13 @@ function wDates(off=0){
   const t=new Date(),dow=t.getDay(),m=new Date(t);
   m.setDate(t.getDate()-dow+1+off*7);
   return Array.from({length:7},(_,i)=>{const d=new Date(m);d.setDate(m.getDate()+i);return d;});
+}
+async function avSlotsAsync(dc,ds,res){
+  const blocked=await lBlocked();
+  const b=res.filter(r=>r.date===ds).map(r=>r.slot);
+  const blk=blocked.filter(x=>x.date===ds).map(x=>x.slot);
+  const n=new Date();
+  return dc.slots.filter(s=>!b.includes(s)&&!blk.includes(s)&&(new Date(ds+'T'+s+':00')-n)/36e5>=4);
 }
 function avSlots(dc,ds,res){
   const b=res.filter(r=>r.date===ds).map(r=>r.slot);
@@ -566,6 +673,7 @@ async function initPub(){
 
 async function renderSvcShowcase(){
   const prices=await lPrices();
+  const extras=await lExtras();
   const grid=document.getElementById('svcCards');
   grid.innerHTML=SVCS.map(s=>{
     const p=prices[s.key];
@@ -578,17 +686,30 @@ async function renderSvcShowcase(){
       ${priceHtml}
     </div>`;
   }).join('');
+  // Aviso perro grande
+  const noticeEl=document.getElementById('largeDogNotice');
+  if(extras.largedog_active){
+    const extra=extras.largedog_price?`$${Number(extras.largedog_price).toLocaleString('es-CL')}`:'a consultar';
+    noticeEl.style.display='flex';
+    noticeEl.innerHTML=`<span style="font-size:1.3rem">🐕</span>
+      <span><b>Perros de raza grande</b> tienen un cobro adicional de <b>${extra}</b> sobre el precio del servicio.</span>`;
+  }else{
+    noticeEl.style.display='none';
+  }
 }
 
 async function renderWeek(){
-  const cfg=await lCfg(),res=await lRes(),dates=wDates(curW);
+  const cfg=await lCfg(),res=await lRes(),blocked=await lBlocked(),dates=wDates(curW);
   const today=new Date();today.setHours(0,0,0,0);
   const f=dates[0],l=dates[6];
   document.getElementById('weekTitle').textContent=`${f.getDate()} ${MN[f.getMonth()]} – ${l.getDate()} ${MN[l.getMonth()]} ${l.getFullYear()}`;
   const g=document.getElementById('weekGrid');g.innerHTML='';
   dates.forEach(d=>{
     const past=d<today,dow=d.getDay(),dc=cfg.days[dow]||{open:false,slots:[],animales:'ambos'},ds=tds(d);
-    const av=avSlots(dc,ds,res);
+    const blkd=blocked.filter(b=>b.date===ds).map(b=>b.slot);
+    const bookedSlots=res.filter(r=>r.date===ds).map(r=>r.slot);
+    const now2=new Date();
+    const av=dc.slots.filter(s=>!bookedSlots.includes(s)&&!blkd.includes(s)&&(new Date(ds+'T'+s+':00')-now2)/36e5>=4);
     let lbl,cls;
     if(!dc.open){lbl='Cerrado';cls='s-off';}
     else if(av.length===0){lbl='Completo';cls='s-full';}
@@ -611,9 +732,10 @@ async function selDay(ds,dObj){
 }
 
 async function renderSlots(ds,dObj){
-  const cfg=await lCfg(),res=await lRes();
+  const cfg=await lCfg(),res=await lRes(),blocked=await lBlocked();
   const dow=dObj.getDay(),dc=cfg.days[dow]||{open:false,slots:[],animales:'ambos'};
   const booked=res.filter(r=>r.date===ds).map(r=>r.slot);
+  const blkd=blocked.filter(b=>b.date===ds).map(b=>b.slot);
   const now=new Date();
   selAT=dc.animales||'ambos';
   document.getElementById('slotsPanel').style.display='block';
@@ -625,7 +747,7 @@ async function renderSlots(ds,dObj){
   const grid=document.getElementById('slotsGrid');grid.innerHTML='';
   let hayD=false;
   dc.slots.forEach(s=>{
-    const isB=booked.includes(s),dH=(new Date(ds+'T'+s+':00')-now)/36e5;
+    const isB=booked.includes(s)||blkd.includes(s),dH=(new Date(ds+'T'+s+':00')-now)/36e5;
     const btn=document.createElement('button');
     if(isB){btn.className='slot-btn booked';btn.textContent=s+' ✗';btn.disabled=true;}
     else if(dH<4){btn.className='slot-btn no-ant';btn.textContent=s+' ⏰';btn.disabled=true;btn.title='Menos de 4h de anticipación';}
@@ -646,25 +768,46 @@ function showBook(){
   upSum();document.getElementById('bookForm').scrollIntoView({behavior:'smooth',block:'start'});
 }
 
-function selSvc(el){document.querySelectorAll('.sch').forEach(c=>c.classList.remove('active'));el.classList.add('active');upSum();}
+function selSvc(el){document.querySelectorAll('.sch[data-key]').forEach(c=>c.classList.remove('active'));el.classList.add('active');upSum();}
+function selPay(el){
+  document.querySelectorAll('.sch[data-pay]').forEach(c=>c.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('efectivoNotice').style.display=el.dataset.pay==='efectivo'?'block':'none';
+  upSum();
+}
 
 async function upSumAsync(){
   const tutor=document.getElementById('fTutor').value||'—';
   const pet=document.getElementById('fPet').value||'—';
   const tel=document.getElementById('fTel').value||'—';
   const edad=document.getElementById('fEdad').value||'—';
-  const activeEl=document.querySelector('.sch.active');
+  const activeEl=document.querySelector('.sch[data-key].active');
   const svc=activeEl?.dataset.val||'—';
   const svcKey=activeEl?.dataset.key||'';
+  const payEl=document.querySelector('.sch[data-pay].active');
+  const pay=payEl?.dataset.pay||'transferencia';
   const prices=await lPrices();
-  const price=svcKey&&prices[svcKey]?` · $${Number(prices[svcKey]).toLocaleString('es-CL')}`:'';
+  const extras=await lExtras();
+  // Mostrar/ocultar casilla perro grande
+  const ldRow=document.getElementById('largeDogRow');
+  if(ldRow){
+    ldRow.style.display=extras.largedog_active?'block':'none';
+    const ldLbl=document.getElementById('largeDogExtraLbl');
+    if(ldLbl&&extras.largedog_price) ldLbl.textContent=`(+$${Number(extras.largedog_price).toLocaleString('es-CL')} adicional)`;
+  }
+  const isLarge=extras.largedog_active&&document.getElementById('fLargeDog')?.checked;
+  let priceNum=svcKey&&prices[svcKey]?Number(prices[svcKey]):0;
+  if(isLarge&&extras.largedog_price) priceNum+=Number(extras.largedog_price);
+  const priceStr=priceNum>0?` · $${priceNum.toLocaleString('es-CL')}`:'';
   const dObj=selD?new Date(selD+'T12:00:00'):null;
   const dLbl=dObj?`${DN[dObj.getDay()]} ${dObj.getDate()} de ${MN[dObj.getMonth()]}`:'—';
   const aLbl=selAT==='perro'?'🐶 Perro':selAT==='gato'?'🐱 Gato':'🐾 Animal';
+  const largeTxt=isLarge?' &nbsp;<b style="color:var(--caramel)">🐕 Raza grande</b>':'';
+  const payTxt=pay==='efectivo'?' &nbsp;<b style="color:#664d03">💵 Efectivo (verificar)</b>':'';
   document.getElementById('fSum').innerHTML=
     `<b>📅 Fecha:</b> ${dLbl} &nbsp;<b>🕐 Hora:</b> ${selS||'—'}<br>
      <b>👤 Tutor:</b> ${tutor} &nbsp;<b>📞 Tel:</b> +56${tel}<br>
-     <b>${aLbl}:</b> ${pet} &nbsp;<b>🎂 Edad:</b> ${edad} &nbsp;<b>✂️ Servicio:</b> ${svc}${price}`;
+     <b>${aLbl}:</b> ${pet} &nbsp;<b>🎂 Edad:</b> ${edad} &nbsp;<b>✂️ Servicio:</b> ${svc}${priceStr}${largeTxt}${payTxt}`;
 }
 function upSum(){upSumAsync();}
 
@@ -674,43 +817,63 @@ async function doBook(){
   const tel=document.getElementById('fTel').value.trim();
   const edad=document.getElementById('fEdad').value.trim();
   const raza=document.getElementById('fRaza').value.trim();
-  const svc=document.querySelector('.sch.active')?.dataset.val;
-  const svcKey=document.querySelector('.sch.active')?.dataset.key||'';
+  const svc=document.querySelector('.sch[data-key].active')?.dataset.val;
+  const svcKey=document.querySelector('.sch[data-key].active')?.dataset.key||'';
+  const payEl=document.querySelector('.sch[data-pay].active');
+  const pay=payEl?.dataset.pay||'transferencia';
   if(!tutor||!pet||!tel||!edad||!selD||!selS){toast('⚠️ Completa todos los campos requeridos');return;}
   if(tel.length<9){toast('⚠️ Ingresa los 9 dígitos del teléfono');return;}
   if((new Date(selD+'T'+selS+':00')-new Date())/36e5<4){toast('⚠️ Reserva con al menos 4 horas de anticipación');return;}
   const res=await lRes();
   if(res.some(r=>r.date===selD&&r.slot===selS)){toast('⚠️ Este horario ya fue reservado');return;}
   const cfg=await lCfg();
+  const extras=await lExtras();
+  const isLarge=extras.largedog_active&&document.getElementById('fLargeDog')?.checked;
   const dc2=cfg.days[new Date(selD+'T12:00:00').getDay()]||{animales:'ambos'};
   const animal=dc2.animales==='gato'?'Gato':dc2.animales==='perro'?'Perro':'Perro/Gato';
   const prices=await lPrices();
-  const priceVal=svcKey&&prices[svcKey]?prices[svcKey]:'';
-  const rv={id:Date.now().toString(),date:selD,slot:selS,tutor,pet,tel:'+56'+tel,edad,animal,service:svc,raza,status:'pendiente',createdAt:new Date().toISOString()};
+  let priceNum=svcKey&&prices[svcKey]?Number(prices[svcKey]):0;
+  if(isLarge&&extras.largedog_price) priceNum+=Number(extras.largedog_price);
+  const priceVal=priceNum>0?String(priceNum):'';
+  const rv={id:Date.now().toString(),date:selD,slot:selS,tutor,pet,tel:'+56'+tel,edad,animal,service:svc,raza,
+    status:'pendiente',pay,largeDog:isLarge?true:false,createdAt:new Date().toISOString()};
   res.push(rv);await sRes(res);
   const dObj=new Date(selD+'T12:00:00');
   const fLbl=`${DN[dObj.getDay()]} ${dObj.getDate()} de ${MN[dObj.getMonth()]}`;
   const ai=animal==='Gato'?'🐱':'🐶';
+  const largeLine=isLarge?`🐕 *Raza grande:* Sí${extras.largedog_price?` (+$${Number(extras.largedog_price).toLocaleString('es-CL')})`:''}`:null;
+  const payLine=pay==='efectivo'
+    ?`💵 *Forma de pago:* Efectivo _(requiere verificación telefónica con el equipo)_`
+    :`🏦 *Forma de pago:* Transferencia`;
+  const abonoLine=pay==='transferencia'
+    ?`💰 *Entiendo que debo realizar un abono de $10.000 para confirmar mi hora.*`
+    :`📞 *Entiendo que debo verificar mi pago en efectivo por teléfono con el equipo para confirmar mi hora.*`;
   const msg=[
     `¡Hola! Quiero reservar una hora en Quiltroquería ✂️🐾`,``,
     `📅 *Fecha:* ${fLbl}`,`🕐 *Hora:* ${selS}`,``,
     `👤 *Tutor:* ${tutor}`,`📞 *Teléfono:* +56${tel}`,``,
     `${ai} *Animal:* ${animal} – ${pet}`,
     raza?`🐕 *Raza:* ${raza}`:null,
+    largeLine,
     `🎂 *Edad:* ${edad}`,``,
-    `✂️ *Servicio:* ${svc}${priceVal?` · $${Number(priceVal).toLocaleString('es-CL')}`:''}`,``,
-    `💰 *Entiendo que debo realizar un abono de $10.000 para confirmar mi hora.*`
+    `✂️ *Servicio:* ${svc}${priceVal?` · $${Number(priceVal).toLocaleString('es-CL')}`:''}`,
+    payLine,``,abonoLine
   ].filter(l=>l!==null).join('\n');
   const waUrl=`https://wa.me/${WA}?text=${encodeURIComponent(msg)}`;
   document.getElementById('bookForm').style.display='none';
   document.getElementById('slotsPanel').style.display='none';
   document.getElementById('succBox').style.display='block';
+  const isEfectivo=pay==='efectivo';
   document.getElementById('succBox').innerHTML=`
     <div class="pending-box">
-      <div style="font-size:3rem">⏳</div>
-      <h3>¡Hora Pre-Agendada!</h3>
-      <p style="margin-bottom:.7rem"><b>${pet}</b> tiene una hora apartada el <b>${fLbl}</b> a las <b>${selS}</b>.<br>Servicio: <b>${svc}</b></p>
-      <p style="font-size:.86rem;color:#5d4037;margin-bottom:1.2rem">⚠️ Tu hora se <b>confirma solo con el abono de $10.000</b>. Envíanos tu solicitud ahora:</p>
+      <div style="font-size:3rem">${isEfectivo?'📞':'⏳'}</div>
+      <h3>${isEfectivo?'¡Hora Pre-Agendada – Verificar Pago!':'¡Hora Pre-Agendada!'}</h3>
+      <p style="margin-bottom:.7rem"><b>${pet}</b> tiene una hora apartada el <b>${fLbl}</b> a las <b>${selS}</b>.<br>Servicio: <b>${svc}</b>${isLarge?' · 🐕 Raza grande':''}</p>
+      <p style="font-size:.86rem;color:#5d4037;margin-bottom:1.2rem">
+        ${isEfectivo
+          ?'⚠️ Elegiste pago en <b>efectivo</b>. Tu hora se confirma solo cuando el equipo verifique contigo por teléfono. Envíanos tu solicitud:'
+          :'⚠️ Tu hora se <b>confirma solo con el abono de $10.000</b>. Envíanos tu solicitud ahora:'}
+      </p>
       <a href="${waUrl}" target="_blank" class="btn btn-wa" style="padding:12px 26px;font-size:.97rem">💬 Enviar solicitud por WhatsApp</a><br><br>
       <button class="btn" style="background:var(--warm);color:var(--dark);border:none" onclick="initPub()">Volver al inicio</button>
     </div>`;
@@ -721,15 +884,18 @@ async function doBook(){
 }
 
 async function renderStats(){
-  const res=await lRes(),cfg=await lCfg();
+  const res=await lRes(),cfg=await lCfg(),blocked=await lBlocked();
   const today=new Date();today.setHours(0,0,0,0);
   const dates=wDates(curW);let av=0,busy=0;
   dates.forEach(d=>{
     if(d<today)return;
     const dow=d.getDay(),ds=tds(d),dc=cfg.days[dow]||{open:false,slots:[],animales:'ambos'};
     if(!dc.open)return;
-    av+=avSlots(dc,ds,res).length;
-    busy+=res.filter(r=>r.date===ds).length;
+    const blkd=blocked.filter(b=>b.date===ds).map(b=>b.slot);
+    const bookedS=res.filter(r=>r.date===ds).map(r=>r.slot);
+    const n2=new Date();
+    av+=dc.slots.filter(s=>!bookedS.includes(s)&&!blkd.includes(s)&&(new Date(ds+'T'+s+':00')-n2)/36e5>=4).length;
+    busy+=res.filter(r=>r.date===ds).length+blkd.length;
   });
   const tR=res.filter(r=>r.date===tds(today)).length;
   document.getElementById('statsBar').innerHTML=`
@@ -827,10 +993,11 @@ async function renderAStrip(){
 }
 
 async function renderSched(ds){
-  const cfg=await lCfg(),res=await lRes();
+  const cfg=await lCfg(),res=await lRes(),blocked=await lBlocked();
   const dObj=new Date(ds+'T12:00:00'),dow=dObj.getDay();
   const dc=cfg.days[dow]||{open:false,slots:[],animales:'ambos'};
   const dayR=res.filter(r=>r.date===ds);
+  const blkd=blocked.filter(b=>b.date===ds).map(b=>b.slot);
   const pend=dayR.filter(r=>r.status==='pendiente').length;
   const conf=dayR.filter(r=>r.status==='confirmada').length;
   document.getElementById('schedTitle').textContent=`📋 ${DF[dow]} ${dObj.getDate()} de ${MN[dObj.getMonth()]} ${dObj.getFullYear()}`;
@@ -844,9 +1011,21 @@ async function renderSched(ds){
   if(!dc.slots.length){grid.innerHTML='<p style="color:var(--gray);font-style:italic">Sin cupos configurados.</p>';renderADayList(ds);return;}
   dc.slots.forEach((slot,idx)=>{
     const r=dayR.find(x=>x.slot===slot);
+    const isBlocked=!r&&blkd.includes(slot);
     const row=document.createElement('div');
-    row.className='cupo'+(r?' has-r':'')+(r&&r.status==='pendiente'?' pend':'')+(r&&r.status==='confirmada'?' conf':'');
+    row.className='cupo'+(r?' has-r':'')+(isBlocked?' pend':'')+(r&&r.status==='pendiente'?' pend':'')+(r&&r.status==='confirmada'?' conf':'');
     const tH=`<div class="cupo-time"><span>${slot}</span><small>cupo ${idx+1}</small></div>`;
+    if(isBlocked){
+      row.innerHTML=`${tH}
+        <div class="cupo-body" style="justify-content:center">
+          <div class="cupo-pet">🔒 <span style="color:var(--red);font-weight:700">Hora Bloqueada</span>
+            <span class="badge b-pend">Sin disponibilidad</span>
+          </div>
+        </div>
+        <div class="cupo-acts">
+          <button class="btn btn-sm btn-success" onclick="unblkSlot('${ds}','${slot}');event.stopPropagation()">🔓 Desbloquear</button>
+        </div>`;
+    } else
     if(r){
       const ai=r.animal==='Gato'?'🐱':'🐶';
       const si=r.service==='Baño'?'🛁':r.service==='Corte de Uñas'?'💅':'✂️';
@@ -862,6 +1041,8 @@ async function renderSched(ds){
           <div class="cupo-det">
             <span>👤 <b>${r.tutor}</b></span><span>📞 ${r.tel}</span>
             ${r.raza?`<span>🐾 ${r.raza}</span>`:''}${r.edad?`<span>🎂 ${r.edad}</span>`:''}
+            ${r.largeDog?`<span style="background:#fff8e1;color:#856404;padding:1px 7px;border-radius:10px;font-weight:700">🐕 Raza grande</span>`:''}
+            ${r.pay==='efectivo'?`<span style="background:#fff3cd;color:#664d03;padding:1px 7px;border-radius:10px;font-weight:700">💵 Efectivo</span>`:''}
           </div>
         </div>
         <div class="cupo-acts">
@@ -870,7 +1051,7 @@ async function renderSched(ds){
           <button class="btn btn-sm btn-danger" onclick="delRes('${r.id}','${ds}');event.stopPropagation()">🗑️ Borrar</button>
         </div>`;
     }else{
-      row.innerHTML=`${tH}<div class="cupo-body" style="justify-content:center"><div class="cupo-empty"><span class="badge b-libre">✓ Disponible</span></div></div><div class="cupo-acts hidden"></div>`;
+      row.innerHTML=`${tH}<div class="cupo-body" style="justify-content:center"><div class="cupo-empty"><span class="badge b-libre">✓ Disponible</span></div></div><div class="cupo-acts"><button class="btn btn-sm btn-danger" style="white-space:nowrap;font-size:.75rem" onclick="blkSlot('${ds}','${slot}');event.stopPropagation()">🔒 Bloquear</button></div>`;
     }
     grid.appendChild(row);
   });
@@ -896,7 +1077,7 @@ async function renderADayList(ds){
       <td><b>${r.pet}</b>${r.raza?`<br><small style="color:var(--gray)">${r.raza}</small>`:''}</td>
       <td>${r.edad||'—'}</td>
       <td>${r.tutor}</td><td>${r.tel}</td>
-      <td><span class="hb hb-svc">${si} ${r.service}</span></td>
+      <td><span class="hb hb-svc">${si} ${r.service}</span>${r.largeDog?` <span class="hb" style="background:#fff8e1;color:#856404">🐕 Grande</span>`:''}${r.pay==='efectivo'?` <span class="hb" style="background:#fff3cd;color:#664d03">💵 Efectivo</span>`:''}</td>
       <td><button class="cpbtn" onclick="cpRow('${r.id}')" title="Copiar">📋</button></td>
     </tr>`;
   }).join('');
@@ -1005,7 +1186,7 @@ async function renderHist(){
                 <td><span class="hb ${r.animal==='Gato'?'hb-cat':'hb-dog'}">${ai} ${r.animal}</span></td>
                 <td><b>${r.pet}</b>${r.raza?`<br><small style="color:var(--gray)">${r.raza}</small>`:''}</td>
                 <td>${r.edad||'—'}</td><td>${r.tutor}</td><td>${r.tel}</td>
-                <td><span class="hb hb-svc">${si} ${r.service}</span></td>
+                <td><span class="hb hb-svc">${si} ${r.service}</span>${r.largeDog?` <span class="hb" style="background:#fff8e1;color:#856404">🐕</span>`:''}${r.pay==='efectivo'?` <span class="hb" style="background:#fff3cd;color:#664d03">💵</span>`:''}</td>
                 <td><button class="cpbtn" onclick="cpRow('${r.id}')" title="Copiar fila">📋</button></td>
               </tr>`;
             }).join('')}
@@ -1045,10 +1226,124 @@ async function delMonth(mk){
   await sRes(res);renderHist();toast(`🗑️ Registros de ${mNm} eliminados`);
 }
 
-// ═══ CONFIG HORARIOS ═══
+async function lBlocked(){
+  try{const r=await _get('qc_blocked');if(r)return JSON.parse(r);}catch(e){}
+  return[];
+}
+async function sBlocked(list){await _set('qc_blocked',JSON.stringify(list));}
+
+async function blkSlot(ds,slot){
+  if(!confirm(`¿Marcar ${slot} del ${ds} como RESERVADO (bloqueado)?\n\nNo aparecerá disponible para clientes.`))return;
+  const blocked=await lBlocked();
+  if(!blocked.find(b=>b.date===ds&&b.slot===slot)){
+    blocked.push({date:ds,slot,id:'blk-'+Date.now()});
+    await sBlocked(blocked);
+  }
+  await renderAStrip();await renderSched(ds);
+  toast('🔒 Hora bloqueada');
+}
+
+async function unblkSlot(ds,slot){
+  let blocked=await lBlocked();
+  blocked=blocked.filter(b=>!(b.date===ds&&b.slot===slot));
+  await sBlocked(blocked);
+  await renderAStrip();await renderSched(ds);
+  toast('🔓 Hora desbloqueada');
+}
+
+async function loadBlkSlots(){
+  const ds=document.getElementById('blkDate').value;
+  const sel=document.getElementById('blkSlotSel');
+  sel.innerHTML='<option value="">— Cargando... —</option>';
+  if(!ds){sel.innerHTML='<option value="">— Elige una fecha primero —</option>';return;}
+  const cfg=await lCfg();
+  const blocked=await lBlocked();
+  const res=await lRes();
+  const dow=new Date(ds+'T12:00:00').getDay();
+  const dc=cfg.days[dow]||{open:false,slots:[]};
+  if(!dc.open||!dc.slots.length){
+    sel.innerHTML='<option value="">— Día sin horarios configurados —</option>';return;
+  }
+  // Filtrar las que ya están bloqueadas o ya tienen reserva
+  const yaBlk=blocked.filter(b=>b.date===ds).map(b=>b.slot);
+  const yaRes=res.filter(r=>r.date===ds).map(r=>r.slot);
+  const libres=dc.slots.filter(s=>!yaBlk.includes(s)&&!yaRes.includes(s));
+  const ocupadas=dc.slots.filter(s=>yaBlk.includes(s)||yaRes.includes(s));
+  if(!libres.length){
+    sel.innerHTML='<option value="">— Todas las horas ya están ocupadas/bloqueadas —</option>';return;
+  }
+  sel.innerHTML='<option value="">— Selecciona hora —</option>';
+  libres.forEach(s=>{
+    const o=document.createElement('option');o.value=s;o.textContent=`🕐 ${s} — disponible`;sel.appendChild(o);
+  });
+  if(ocupadas.length){
+    const sep=document.createElement('option');sep.disabled=true;sep.textContent='── Ya ocupadas/bloqueadas ──';sel.appendChild(sep);
+    ocupadas.forEach(s=>{
+      const o=document.createElement('option');o.value='';o.disabled=true;
+      const tag=yaBlk.includes(s)?'🔒 bloqueada':yaRes.includes(s)?'📋 reservada':'';
+      o.textContent=`${s} — ${tag}`;sel.appendChild(o);
+    });
+  }
+}
+
+async function blkSlotManual(){
+  const ds=document.getElementById('blkDate').value;
+  const slot=document.getElementById('blkSlotSel').value;
+  if(!ds){toast('⚠️ Selecciona una fecha');return;}
+  if(!slot){toast('⚠️ Selecciona una hora disponible');return;}
+  const blocked=await lBlocked();
+  if(blocked.find(b=>b.date===ds&&b.slot===slot)){toast('⚠️ Esa hora ya está bloqueada');return;}
+  blocked.push({date:ds,slot,id:'blk-'+Date.now()});
+  await sBlocked(blocked);
+  await loadBlkSlots(); // refresca el selector
+  renderBlkList();
+  toast('🔒 Hora bloqueada correctamente');
+}
+
+async function renderBlkList(){
+  const blocked=await lBlocked();
+  const el=document.getElementById('blkList');
+  if(!el)return;
+  if(!blocked.length){el.innerHTML='<p style="color:var(--gray);font-size:.82rem;font-style:italic">No hay horas bloqueadas actualmente.</p>';return;}
+  const sorted=[...blocked].sort((a,b)=>a.date===b.date?a.slot.localeCompare(b.slot):a.date.localeCompare(b.date));
+  el.innerHTML=`
+    <div style="font-size:.78rem;font-weight:700;color:var(--gray);text-transform:uppercase;letter-spacing:.5px;margin-bottom:7px">Horas actualmente bloqueadas</div>
+    <div style="display:flex;flex-wrap:wrap;gap:7px">
+      ${sorted.map(b=>{
+        const d=new Date(b.date+'T12:00:00');
+        const lbl=`${d.getDate()}/${p2(d.getMonth()+1)}/${d.getFullYear()} ${b.slot}`;
+        return `<span style="background:#fde8e8;border:1.5px solid #f5c6c6;border-radius:18px;padding:4px 12px;font-size:.8rem;font-weight:600;display:inline-flex;align-items:center;gap:6px">
+          🔒 ${lbl}
+          <button onclick="unblkSlotCfg('${b.date}','${b.slot}')" style="background:none;border:none;cursor:pointer;color:var(--red);font-size:1rem;line-height:1;padding:0 2px" title="Desbloquear">×</button>
+        </span>`;
+      }).join('')}
+    </div>`;
+}
+
+async function unblkSlotCfg(ds,slot){
+  let blocked=await lBlocked();
+  blocked=blocked.filter(b=>!(b.date===ds&&b.slot===slot));
+  await sBlocked(blocked);
+  // Si la fecha del selector coincide, refrescar el selector también
+  const selDate=document.getElementById('blkDate')?.value;
+  if(selDate===ds)await loadBlkSlots();
+  renderBlkList();
+  toast('🔓 Hora desbloqueada');
+}
+
 async function renderCfg(){
   cfgSt=await lCfg();
   const prices=await lPrices();
+  const extras=await lExtras();
+
+  // Load large dog settings
+  const ldCb=document.getElementById('cfgLargeDogActive');
+  if(ldCb){
+    ldCb.checked=extras.largedog_active||false;
+    togLargeDogCfg(ldCb);
+    const ldPriceInp=document.getElementById('cfgLargeDogPrice');
+    if(ldPriceInp) ldPriceInp.value=extras.largedog_price||'';
+  }
 
   // Render price inputs
   const pGrid=document.getElementById('priceCfg');
@@ -1081,6 +1376,7 @@ async function renderCfg(){
       <div id="cb-${i}" style="flex:1">${dc.open?renderDayCfgBody(i,dc):''}</div>`;
     el.appendChild(row);
   }
+  renderBlkList();
 }
 
 function renderDayCfgBody(i,dc){
@@ -1137,8 +1433,24 @@ async function saveCfgAll(){
     prices[s.key]=v?String(parseInt(v,10)):'';
   });
   await sPrices(prices);
+  // Save large dog extras
+  const ldActive=document.getElementById('cfgLargeDogActive')?.checked||false;
+  const ldPrice=document.getElementById('cfgLargeDogPrice')?.value||'';
+  await sExtras({largedog_active:ldActive,largedog_price:ldPrice?String(parseInt(ldPrice,10)):''});
   await sCfg(cfgSt);
   toast('💾 Configuración y precios guardados');
+}
+
+function togLargeDogCfg(cb){
+  const row=document.getElementById('cfgLargeDogPriceRow');
+  const st=document.getElementById('cfgLargeDogStatus');
+  if(cb.checked){
+    row.style.display='flex';
+    st.textContent='Activado';st.style.color='var(--green)';
+  }else{
+    row.style.display='none';
+    st.textContent='Desactivado';st.style.color='var(--gray)';
+  }
 }
 
 // ═══ UTILS ═══
@@ -1150,6 +1462,45 @@ function toast(msg){
   const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');
   setTimeout(()=>t.classList.remove('show'),2800);
 }
+
+// ═══ EXPONER AL SCOPE GLOBAL (requerido con type="module") ═══
+window.showPublic        = showPublic;
+window.showLogin         = showLogin;
+window.showAdmin         = showAdmin;
+window.logout            = logout;
+window.doLogin           = doLogin;
+window.togPass           = togPass;
+window.changeWeek        = changeWeek;
+window.selDay            = selDay;
+window.selSvc            = selSvc;
+window.selPay            = selPay;
+window.upSum             = upSum;
+window.doBook            = doBook;
+window.switchTab         = switchTab;
+window.aChgWeek          = aChgWeek;
+window.cfmRes            = cfmRes;
+window.delRes            = delRes;
+window.openMod           = openMod;
+window.closeMod          = closeMod;
+window.saveEdit          = saveEdit;
+window.togM              = togM;
+window.cpRow             = cpRow;
+window.cpMonth           = cpMonth;
+window.cpDayAll          = cpDayAll;
+window.delMonth          = delMonth;
+window.blkSlot           = blkSlot;
+window.unblkSlot         = unblkSlot;
+window.blkSlotManual     = blkSlotManual;
+window.loadBlkSlots      = loadBlkSlots;
+window.unblkSlotCfg      = unblkSlotCfg;
+window.renderCfg         = renderCfg;
+window.saveCfgAll        = saveCfgAll;
+window.togDay            = togDay;
+window.addSlot           = addSlot;
+window.rmSlot            = rmSlot;
+window.setA              = setA;
+window.togLargeDogCfg    = togLargeDogCfg;
+window.cpPubRow          = cpPubRow;
 
 // ═══ INIT ═══
 initPub();
