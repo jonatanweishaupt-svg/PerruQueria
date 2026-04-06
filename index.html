@@ -233,6 +233,74 @@ input:checked+.tsl::before{transform:translateX(20px)}
   font-size:.9rem;box-shadow:0 8px 32px rgba(0,0,0,.2);transition:transform .4s;z-index:9999}
 #toast.show{transform:translateX(-50%) translateY(0)}
 .tgray{color:var(--gray);font-size:.86rem}.mt1{margin-top:1rem}
+
+/* FRASE DEL DÍA */
+.quote-box{
+  position:relative;
+  background:linear-gradient(135deg,#fff9f0 0%,#fdf3e3 100%);
+  border:2px solid var(--caramel);
+  border-radius:20px;
+  padding:1.4rem 2.2rem 1.4rem 1.8rem;
+  margin-bottom:1.6rem;
+  box-shadow:0 4px 18px rgba(196,132,58,.13);
+  overflow:hidden;
+  display:flex;
+  align-items:center;
+  gap:1.2rem;
+}
+.quote-box::before{
+  content:'';
+  position:absolute;
+  top:-18px;left:-18px;
+  width:80px;height:80px;
+  background:radial-gradient(circle,rgba(196,132,58,.13) 0%,transparent 70%);
+  border-radius:50%;
+}
+.quote-box::after{
+  content:'';
+  position:absolute;
+  bottom:-22px;right:-22px;
+  width:100px;height:100px;
+  background:radial-gradient(circle,rgba(74,124,89,.10) 0%,transparent 70%);
+  border-radius:50%;
+}
+.quote-deco{
+  font-size:2.4rem;
+  flex-shrink:0;
+  animation:floatPaw 3s ease-in-out infinite;
+  filter:drop-shadow(0 2px 4px rgba(196,132,58,.25));
+  z-index:1;
+}
+@keyframes floatPaw{
+  0%,100%{transform:translateY(0) rotate(-5deg)}
+  50%{transform:translateY(-5px) rotate(5deg)}
+}
+.quote-content{flex:1;z-index:1}
+.quote-text{
+  font-family:'Playfair Display',serif;
+  font-size:1rem;
+  font-style:italic;
+  color:var(--brown);
+  line-height:1.65;
+  margin-bottom:.35rem;
+}
+.quote-author{
+  font-size:.76rem;
+  font-weight:700;
+  color:var(--caramel);
+  text-transform:uppercase;
+  letter-spacing:.6px;
+}
+.quote-corner-flowers{
+  position:absolute;
+  font-size:1.1rem;
+  opacity:.55;
+  line-height:1;
+}
+.quote-corner-flowers.tl{top:8px;left:10px}
+.quote-corner-flowers.tr{top:8px;right:10px}
+.quote-corner-flowers.bl{bottom:8px;left:10px}
+.quote-corner-flowers.br{bottom:8px;right:10px}
 </style>
 </head>
 <body>
@@ -250,6 +318,19 @@ input:checked+.tsl::before{transform:translateX(20px)}
 <div class="view active" id="viewPublic">
   <div class="container">
     <div class="stats-bar" id="statsBar"></div>
+
+    <!-- FRASE DEL DÍA -->
+    <div class="quote-box" id="quoteBox">
+      <span class="quote-corner-flowers tl">🌸🐾</span>
+      <span class="quote-corner-flowers tr">🌼🐾</span>
+      <span class="quote-corner-flowers bl">🐾🌺</span>
+      <span class="quote-corner-flowers br">🐾🌸</span>
+      <div class="quote-deco" id="quoteDeco">🐾</div>
+      <div class="quote-content">
+        <div class="quote-text" id="quoteText"></div>
+        <div class="quote-author" id="quoteAuthor"></div>
+      </div>
+    </div>
 
     <!-- SERVICIOS -->
     <div class="svc-showcase" id="svcShowcase">
@@ -1471,6 +1552,72 @@ function toast(msg){
   const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');
   setTimeout(()=>t.classList.remove('show'),2800);
 }
+
+// ═══ FRASE DEL DÍA ═══
+(function initQuote(){
+  const frases=[
+    {texto:"La grandeza de una nación y su progreso moral pueden ser juzgados por la forma en que trata a sus animales.",autor:"Mahatma Gandhi"},
+    {texto:"Hasta que uno no ha amado a un animal, una parte de su alma permanece dormida.",autor:"Anatole France"},
+    {texto:"Los animales son amigos tan agradables: no hacen preguntas, no critican.",autor:"George Eliot"},
+    {texto:"Algunos hablan con los animales. No muchos escuchan, sin embargo. Ese es el problema.",autor:"A.A. Milne"},
+    {texto:"El hombre es el animal más cruel.",autor:"Friedrich Nietzsche"},
+    {texto:"La gente habla a veces de la crueldad 'bestial' del hombre, pero eso es terriblemente injusto e insultante para las bestias; ningún animal podría ser tan cruel como un hombre.",autor:"Fëdor Dostoievski"},
+    {texto:"Nuestra tarea debe ser liberarnos… ampliando nuestro círculo de compasión para abrazar a todas las criaturas vivientes y a toda la naturaleza y su belleza.",autor:"Albert Einstein"},
+    {texto:"Cada especie es una obra maestra, una creación ensamblada con extremo cuidado y genio.",autor:"Edward O. Wilson"},
+    {texto:"Los ojos de un animal tienen el poder de hablar un gran lenguaje.",autor:"Martin Buber"},
+    {texto:"Un perro es lo único en la tierra que te ama más de lo que te ama a sí mismo.",autor:"Josh Billings"},
+    {texto:"El tiempo pasado con gatos nunca es tiempo perdido.",autor:"Sigmund Freud"},
+    {texto:"Los perros son los seres más asombrosos; dan amor incondicional.",autor:"Gilda Radner"},
+    {texto:"La naturaleza no se apresura, pero todo se logra.",autor:"Lao Tzu"},
+    {texto:"En cada paseo con la naturaleza uno recibe mucho más de lo que busca.",autor:"John Muir"},
+    {texto:"Mira profundamente en la naturaleza y entonces entenderás todo mejor.",autor:"Albert Einstein"},
+    {texto:"Los animales salvajes son menos salvajes y más humanos que muchos humanos de este mundo.",autor:"Steve Irwin"},
+    {texto:"Si podemos enseñar a la gente sobre la vida silvestre, se conmoverán. Porque los humanos quieren salvar lo que aman.",autor:"Steve Irwin"},
+    {texto:"No es suficiente amar a los animales; debemos protegerlos y preservarlos activamente.",autor:"Velma Bronn Johnston"},
+    {texto:"El ideal de la calma existe en un gato sentado.",autor:"Jules Renard"},
+    {texto:"Los gatos eligen a sus dueños; nosotros no los poseemos.",autor:"Kristin Cast"},
+    {texto:"Los perros vienen cuando se les llama; los gatos toman un mensaje y te responden más tarde.",autor:"Mary Bly"},
+    {texto:"La naturaleza enseña a las bestias a conocer a sus amigos.",autor:"William Shakespeare"},
+    {texto:"En todas las cosas de la naturaleza hay algo de maravilloso.",autor:"Aristóteles"},
+    {texto:"La forma más clara de entrar en el Universo es a través de un bosque salvaje.",autor:"John Muir"},
+    {texto:"Adopta el ritmo de la naturaleza: su secreto es la paciencia.",autor:"Ralph Waldo Emerson"},
+    {texto:"Los caballos hacen que un paisaje parezca hermoso.",autor:"Alice Walker"},
+    {texto:"Ahora es necesario civilizar al hombre en su relación con la naturaleza y los animales.",autor:"Víctor Hugo"},
+    {texto:"Los animales no odian y se supone que somos mejores que ellos.",autor:"Elvis Presley"},
+    {texto:"La felicidad es un cachorro caliente.",autor:"Charles M. Schulz"},
+    {texto:"Los gatos son ángeles con pelaje.",autor:"Sark"},
+    {texto:"Los animales son mis amigos… y no me como a mis amigos.",autor:"George Bernard Shaw"},
+    {texto:"Cualquier vistazo a la vida de un animal aviva la nuestra y la hace mucho más grande y mejor.",autor:"John Muir"},
+    {texto:"Los perros creen que son humanos. Los gatos creen que son Dios.",autor:"Jeff Valdez"},
+    {texto:"La vida es tan querida para una criatura muda como para el hombre.",autor:"Tradición indígena"},
+    {texto:"La naturaleza no hace nada en vano, y entre los animales, el hombre es el único que posee la palabra.",autor:"Aristóteles"},
+    {texto:"Si sirves a la naturaleza, ella te servirá a ti.",autor:"Confucio"},
+    {texto:"Los animales enseñan a amar sin palabras y curar sin condiciones.",autor:"Anónimo"},
+    {texto:"Los perros no son toda nuestra vida, pero hacen que nuestras vidas sean completas.",autor:"Roger Caras"},
+    {texto:"El vínculo con un perro es tan duradero como los lazos que esta Tierra puede ofrecer.",autor:"Konrad Lorenz"},
+    {texto:"No hay nada más verdadero en este mundo que el amor de un buen perro.",autor:"Mira Grant"},
+    {texto:"Los gatos tienen todo: admiración, sueño interminable y compañía solo cuando quieren.",autor:"Rod McKuen"},
+    {texto:"Los animales son confiables, muchos llenos de amor, verdaderos en sus afectos, predecibles en sus acciones, agradecidos y leales.",autor:"Alfred A. Montapert"},
+    {texto:"No poseemos la Tierra; pertenecemos a ella.",autor:"Steve Irwin"},
+    {texto:"Cada criatura fue diseñada para servir a un propósito.",autor:"Anónimo"},
+    {texto:"La Tierra ríe en flores.",autor:"Ralph Waldo Emerson"},
+    {texto:"Los errores que se cometen ahora se cometen para siempre.",autor:"Jeremy Bentham"},
+    {texto:"La ardilla que matas en broma, muere en serio.",autor:"Henry David Thoreau"},
+    {texto:"Los animales son tales compañeros agradables: no hacen preguntas, no pasan críticas.",autor:"George Eliot"},
+    {texto:"Los perros no son toda nuestra vida, pero hacen que nuestras vidas sean completas.",autor:"Roger Caras"},
+    {texto:"Hasta que uno ha amado a un animal, una parte de su alma permanece sin despertar.",autor:"Anatole France"},
+  ];
+  const decos=["🐾","🐶","🐱","🌸","🐕","🐈","🌺","🌼","🦴","🐩"];
+  const idx=Math.floor(Math.random()*frases.length);
+  const didx=Math.floor(Math.random()*decos.length);
+  const f=frases[idx];
+  const tEl=document.getElementById('quoteText');
+  const aEl=document.getElementById('quoteAuthor');
+  const dEl=document.getElementById('quoteDeco');
+  if(tEl)tEl.textContent='\u201C'+f.texto+'\u201D';
+  if(aEl)aEl.textContent='— '+f.autor;
+  if(dEl)dEl.textContent=decos[didx];
+})();
 
 // ═══ INIT ═══
 // Exponer funciones al scope global para los onclick del HTML
