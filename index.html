@@ -859,6 +859,7 @@ async function renderSlots(ds,dObj){
   selAT=dc.animales||'ambos';
   document.getElementById('slotsPanel').style.display='block';
   document.getElementById('slotTitle').textContent=`🕐 ${DN[dow]} ${dObj.getDate()} de ${MN[dObj.getMonth()]}`;
+  setTimeout(()=>document.getElementById('slotsPanel').scrollIntoView({behavior:'smooth',block:'start'}),80);
   const badge=document.getElementById('aBadge');
   badge.innerHTML=selAT==='perro'?'<span class="atag atag-p">🐶 Solo Perros</span>':
     selAT==='gato'?'<span class="atag atag-g">🐱 Solo Gatos</span>':
