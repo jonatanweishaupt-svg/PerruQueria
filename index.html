@@ -517,6 +517,7 @@ input:checked+.tsl::before{transform:translateX(20px)}
       <button class="admin-tab active" onclick="switchTab('tRes',this)">📋 Agenda del Día</button>
       <button class="admin-tab" onclick="switchTab('tHist',this)">📁 Historial</button>
       <button class="admin-tab" onclick="switchTab('tHor',this)">🕐 Horarios</button>
+      <button class="admin-tab" onclick="switchTab('tVal',this)">💰 Valores</button>
     </div>
 
     <div class="admin-section active" id="tRes">
@@ -547,6 +548,36 @@ input:checked+.tsl::before{transform:translateX(20px)}
     <div class="admin-section" id="tHor">
       <p style="color:var(--gray);font-size:.88rem;margin-bottom:1.2rem">
         Activa días, elige si atiende <b>Perros</b>, <b>Gatos</b> o <b>Ambos</b>, y configura los horarios disponibles.
+      </p>
+
+      <div id="cfgDays"></div>
+      <button class="btn btn-success" style="margin-top:1rem" onclick="saveCfgAll()">💾 Guardar Configuración</button>
+
+      <!-- BLOQUEO DE HORAS -->
+      <div style="background:var(--white);border-radius:var(--radius);padding:1.4rem;box-shadow:var(--shadow);margin-top:1.5rem;border-left:4px solid var(--red)">
+        <h3 style="font-family:'Playfair Display',serif;font-size:1.15rem;margin-bottom:.4rem">🔒 Bloquear Hora Específica</h3>
+        <p style="font-size:.8rem;color:var(--gray);margin-bottom:1rem">Elige un día y se mostrarán solo las horas disponibles configuradas para ese día.</p>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end">
+          <div class="form-group" style="flex:1;min-width:140px">
+            <label>Fecha</label>
+            <input type="date" id="blkDate" onchange="loadBlkSlots()" style="padding:10px 13px;border:2px solid var(--warm);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:.9rem;background:var(--cream);color:var(--dark);outline:none">
+          </div>
+          <div class="form-group" style="flex:1;min-width:140px">
+            <label>Hora disponible</label>
+            <select id="blkSlotSel" style="padding:10px 13px;border:2px solid var(--warm);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:.9rem;background:var(--cream);color:var(--dark);outline:none;width:100%">
+              <option value="">— Elige una fecha primero —</option>
+            </select>
+          </div>
+          <button class="btn btn-danger" onclick="blkSlotManual()">🔒 Bloquear</button>
+        </div>
+        <div id="blkList" style="margin-top:1.1rem"></div>
+      </div>
+    </div>
+
+    <!-- SECCIÓN VALORES -->
+    <div class="admin-section" id="tVal">
+      <p style="color:var(--gray);font-size:.88rem;margin-bottom:1.2rem">
+        Define los precios que se muestran en la página pública. Deja en blanco para no mostrar precio.
       </p>
 
       <!-- PRECIOS -->
@@ -582,29 +613,9 @@ input:checked+.tsl::before{transform:translateX(20px)}
         </div>
       </div>
 
-      <div id="cfgDays"></div>
-      <button class="btn btn-success" style="margin-top:1rem" onclick="saveCfgAll()">💾 Guardar Configuración</button>
-
-      <!-- BLOQUEO DE HORAS -->
-      <div style="background:var(--white);border-radius:var(--radius);padding:1.4rem;box-shadow:var(--shadow);margin-top:1.5rem;border-left:4px solid var(--red)">
-        <h3 style="font-family:'Playfair Display',serif;font-size:1.15rem;margin-bottom:.4rem">🔒 Bloquear Hora Específica</h3>
-        <p style="font-size:.8rem;color:var(--gray);margin-bottom:1rem">Elige un día y se mostrarán solo las horas disponibles configuradas para ese día.</p>
-        <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end">
-          <div class="form-group" style="flex:1;min-width:140px">
-            <label>Fecha</label>
-            <input type="date" id="blkDate" onchange="loadBlkSlots()" style="padding:10px 13px;border:2px solid var(--warm);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:.9rem;background:var(--cream);color:var(--dark);outline:none">
-          </div>
-          <div class="form-group" style="flex:1;min-width:140px">
-            <label>Hora disponible</label>
-            <select id="blkSlotSel" style="padding:10px 13px;border:2px solid var(--warm);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:.9rem;background:var(--cream);color:var(--dark);outline:none;width:100%">
-              <option value="">— Elige una fecha primero —</option>
-            </select>
-          </div>
-          <button class="btn btn-danger" onclick="blkSlotManual()">🔒 Bloquear</button>
-        </div>
-        <div id="blkList" style="margin-top:1.1rem"></div>
-      </div>
+      <button class="btn btn-success" onclick="saveCfgAll()">💾 Guardar Valores</button>
     </div>
+
   </div>
 </div>
 
@@ -1016,13 +1027,21 @@ async function renderStats(){
     if(!dc.open)return;
     const blkd=blocked.filter(b=>b.date===ds).map(b=>b.slot);
     const bookedS=res.filter(r=>r.date===ds).map(r=>r.slot);
-    const n2=new Date();
     av+=dc.slots.filter(s=>!bookedS.includes(s)&&!blkd.includes(s)&&slotInClientHours(s)).length;
     busy+=res.filter(r=>r.date===ds).length+blkd.length;
   });
-  const tR=res.filter(r=>r.date===tds(today)).length;
+  const todayDs=tds(today);
+  const todayDow=today.getDay();
+  const todayCfg=cfg.days[todayDow]||{open:false,slots:[],animales:'ambos'};
+  const todayBlkd=blocked.filter(b=>b.date===todayDs).map(b=>b.slot);
+  const todayBooked=res.filter(r=>r.date===todayDs).map(r=>r.slot);
+  const todayDisp=todayCfg.open
+    ? todayCfg.slots.filter(s=>!todayBooked.includes(s)&&!todayBlkd.includes(s)&&slotInClientHours(s)).length
+    : 0;
+  const todayColor=todayDisp===0?'red':todayDisp<=2?'caramel':'green';
+  const todayIcon=todayDisp===0?'😔':todayDisp<=2?'⚡':'✂️';
   document.getElementById('statsBar').innerHTML=`
-    <div class="stat-card"><div class="stat-icon">📅</div><div><div class="stat-label">Hoy</div><div class="stat-val caramel">${tR}</div></div></div>
+    <div class="stat-card"><div class="stat-icon">${todayIcon}</div><div><div class="stat-label">Cupos disponibles hoy</div><div class="stat-val ${todayColor}">${todayDisp}</div></div></div>
     <div class="stat-card"><div class="stat-icon">✅</div><div><div class="stat-label">Disponibles semana</div><div class="stat-val green">${av}</div></div></div>
     <div class="stat-card"><div class="stat-icon">🔒</div><div><div class="stat-label">Reservados semana</div><div class="stat-val red">${busy}</div></div></div>
     <div class="stat-card stat-card-cta" onclick="document.getElementById('agendaAnchor').scrollIntoView({behavior:'smooth'})" style="cursor:pointer;background:linear-gradient(135deg,var(--brown) 0%,#7a5240 100%);border:none;justify-content:center;text-align:center;flex-direction:column;gap:6px;padding:1rem .8rem">
@@ -1094,6 +1113,7 @@ function switchTab(id,btn){
   if(id==='tRes')initAdm();
   if(id==='tHist')renderHist();
   if(id==='tHor')renderCfg();
+  if(id==='tVal')renderCfg();
 }
 
 async function initAdm(){
@@ -1494,18 +1514,21 @@ async function renderCfg(){
       </div>
     </div>`).join('');
 
-  const el=document.getElementById('cfgDays');el.innerHTML='';
-  for(let i=0;i<7;i++){
-    const dc=cfgSt.days[i]||{open:false,slots:[],animales:'ambos'};
-    const row=document.createElement('div');row.className='cfg-row';row.id=`cr-${i}`;
-    row.innerHTML=`
-      <span class="cfg-dn">${DF[i]}</span>
-      <label class="tsw"><input type="checkbox" ${dc.open?'checked':''} onchange="togDay(${i},this)"><span class="tsl"></span></label>
-      <span id="cst-${i}" style="font-size:.79rem;min-width:56px">${dc.open?'<span style="color:var(--green);font-weight:600">Abierto</span>':'<span style="color:var(--red)">Cerrado</span>'}</span>
-      <div id="cb-${i}" style="flex:1">${dc.open?renderDayCfgBody(i,dc):''}</div>`;
-    el.appendChild(row);
+  const el=document.getElementById('cfgDays');
+  if(el){
+    el.innerHTML='';
+    for(let i=0;i<7;i++){
+      const dc=cfgSt.days[i]||{open:false,slots:[],animales:'ambos'};
+      const row=document.createElement('div');row.className='cfg-row';row.id=`cr-${i}`;
+      row.innerHTML=`
+        <span class="cfg-dn">${DF[i]}</span>
+        <label class="tsw"><input type="checkbox" ${dc.open?'checked':''} onchange="togDay(${i},this)"><span class="tsl"></span></label>
+        <span id="cst-${i}" style="font-size:.79rem;min-width:56px">${dc.open?'<span style="color:var(--green);font-weight:600">Abierto</span>':'<span style="color:var(--red)">Cerrado</span>'}</span>
+        <div id="cb-${i}" style="flex:1">${dc.open?renderDayCfgBody(i,dc):''}</div>`;
+      el.appendChild(row);
+    }
+    renderBlkList();
   }
-  renderBlkList();
 }
 
 function renderDayCfgBody(i,dc){
